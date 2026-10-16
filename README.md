@@ -277,8 +277,7 @@ Particle settings should be defined after the corresponding `@#` tag using the s
   e.g. 1 2 1 3 would give the angle between 1 and 2 in the rest frame 
   of a resonance in `m_13` (i.e. `theta_13` in a 3-body decay)
 * `costheta`: The cosine of theta
-* `Mcorr`: The corrected mass of the combination of the given particles
-  correcting for any invisible particles
+* `Mcorr`: The corrected mass of the combination of the given particles, using the smeared momentum of the visible daughters and a flight direction defined by the vector from the origin vertex to the decay vertex (true vertices for truth-level parameters, smeared vertices otherwise), correcting for any invisible particles
 * `ProbNNmu` : Particle ID feature for the muon hypothesis
 * `ProbNNe` : Particle ID feature for the electron hypothesis
 * `ProbNNpi` : Particle ID feature for the pion hypothesis
