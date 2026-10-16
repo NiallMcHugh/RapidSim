@@ -277,33 +277,44 @@ double RapidParam::evalPID() {
 
 double RapidParam::evalCorrectedMass() {
 
-	TLorentzVector momS, momT;
-
-	//load the true (inc. invisible) and smeared momenta
+	//visible momentum (smeared)
+	TLorentzVector momS;
 	for(unsigned int i=0; i<particles_.size(); ++i) {
-		momT += particles_[i]->getP();
 		momS += particles_[i]->getPSmeared();
 	}
 
-	//get the sine and cosine of the angle to the B flight direction with a Gaussian smearing applied
-	double cosDir = momT.Vect().Dot(momS.Vect())/(momT.P()*momS.P());
-	double dir = TMath::ACos(cosDir) + gRandom->Gaus(0.,0.001); //TODO smearing parameter should be configurable
-	double sinDir = TMath::Sin(dir);
-	cosDir = TMath::Cos(dir);
+	RapidVertex* origVtx = particles_[0]->getOriginVertex();
+	RapidVertex* decayVtx = particles_[0]->getDecayVertex();
 
-	//get the longitudinal and transverse momentum of the visible daughters wrt the B flight direction
-	//double pLong  = TMath::Abs(cosDir * momS.P());
-	double pTran = TMath::Abs(sinDir * momS.P());
+	//all particles must share the same vertices
+	for(unsigned int i=1; i<particles_.size(); ++i) {
+		if(particles_[i]->getOriginVertex()!=origVtx || particles_[i]->getDecayVertex()!=decayVtx) {
+			std::cout << "WARNING in RapidParam::evalCorrectedMass : particles do not share a common origin/decay vertex. "
+			          << "Returning -999." << std::endl;
+			return -999.;
+		}
+	}
 
-	//invariant masses of the visible daughters and the parent as well as the missing mass
+	ROOT::Math::XYZPoint orig = origVtx->getVertex(truth_);
+	ROOT::Math::XYZPoint decay = decayVtx->getVertex(truth_);
+	ROOT::Math::XYZVector flight(decay.X()-orig.X(), decay.Y()-orig.Y(), decay.Z()-orig.Z());
+
+	if(flight.R() <= 0.) {
+		std::cout << "WARNING in RapidParam::evalCorrectedMass : zero-length flight vector for "
+		          << particles_[0]->name() << ". Returning -999." << std::endl;
+		return -999.;
+	}
+
+	//transverse momentum of the visible daughters wrt the vertex-defined flight direction
+	ROOT::Math::XYZVector p(momS.Px(), momS.Py(), momS.Pz());
+	double pLong = p.Dot(flight.Unit());
+	double pTran2 = p.Mag2() - pLong*pLong;
+	if(pTran2 < 0.) pTran2 = 0.;
+	double pTran = TMath::Sqrt(pTran2);
+
 	double mVis2 = momS.M2();
-	//double mPar2 = momT.M2();
-	//double mMiss2 = mPar2 - mVis2;
 
-	//the corrected mass
-	double mCorr = TMath::Sqrt( mVis2 + pTran*pTran ) + pTran;
-
-	return mCorr;
+	return TMath::Sqrt( mVis2 + pTran2 ) + pTran;
 }
 
 double RapidParam::evalTheta() {
