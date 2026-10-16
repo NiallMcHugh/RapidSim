@@ -297,16 +297,16 @@ double RapidParam::evalCorrectedMass() {
 
 	ROOT::Math::XYZPoint orig = origVtx->getVertex(truth_);
 	ROOT::Math::XYZPoint decay = decayVtx->getVertex(truth_);
-	ROOT::Math::XYZVector flight(decay.X()-orig.X(), decay.Y()-orig.Y(), decay.Z()-orig.Z());
+	TVector3 flight(decay.X()-orig.X(), decay.Y()-orig.Y(), decay.Z()-orig.Z());
 
-	if(flight.R() <= 0.) {
+	if(flight.Mag() <= 0.) {
 		std::cout << "WARNING in RapidParam::evalCorrectedMass : zero-length flight vector for "
 		          << particles_[0]->name() << ". Returning -999." << std::endl;
 		return -999.;
 	}
 
 	//transverse momentum of the visible daughters wrt the vertex-defined flight direction
-	ROOT::Math::XYZVector p(momS.Px(), momS.Py(), momS.Pz());
+	TVector3 p = momS.Vect();
 	double pLong = p.Dot(flight.Unit());
 	double pTran2 = p.Mag2() - pLong*pLong;
 	if(pTran2 < 0.) pTran2 = 0.;
