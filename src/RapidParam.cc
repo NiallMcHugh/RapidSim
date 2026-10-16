@@ -286,18 +286,12 @@ double RapidParam::evalCorrectedMass() {
 	RapidVertex* origVtx = particles_[0]->getOriginVertex();
 	RapidVertex* decayVtx = particles_[0]->getDecayVertex();
 
-	if(!origVtx || !decayVtx) {
-		std::cout << "WARNING in RapidParam::evalCorrectedMass : missing origin or decay vertex for "
-		          << particles_[0]->name() << ". Returning -999." << std::endl;
-		return -999.;
-	}
-
-	//check all particles share the same vertices, otherwise fall back to the first particle's
+	//all particles must share the same vertices
 	for(unsigned int i=1; i<particles_.size(); ++i) {
 		if(particles_[i]->getOriginVertex()!=origVtx || particles_[i]->getDecayVertex()!=decayVtx) {
 			std::cout << "WARNING in RapidParam::evalCorrectedMass : particles do not share a common origin/decay vertex. "
-			          << "Using the vertices of " << particles_[0]->name() << "." << std::endl;
-			break;
+			          << "Returning -999." << std::endl;
+			return -999.;
 		}
 	}
 
